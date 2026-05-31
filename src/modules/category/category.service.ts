@@ -7,6 +7,7 @@ import {
   createCategorySchema,
   updateCategorySchema,
 } from "./category.validation";
+import { StatusCodes } from "http-status-codes";
 
 export const getAllCategories = async (
   query: z.infer<typeof categoriesQuerySchema>
@@ -54,7 +55,7 @@ export const getCategoryById = async (id: string) => {
       _count: { select: { products: true } },
     },
   });
-  if (!category) throw new AppError("Category not found", 404);
+  if (!category) throw new AppError("Category not found", StatusCodes.NOT_FOUND);
   return category;
 };
 

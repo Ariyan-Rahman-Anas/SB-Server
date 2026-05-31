@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../utils/AppError";
+import { StatusCodes } from "http-status-codes";
 
 // Role hierarchy — higher index = more privilege
 const ROLE_HIERARCHY = ["CUSTOMER", "MODERATOR", "ADMIN", "SUPER_ADMIN"] as const;
@@ -16,14 +17,14 @@ export const requireRole =
     const user = req.currentUser;
 
     if (!user) {
-      return next(new AppError("Unauthorized — please sign in", 401));
+      return next(new AppError("Unauthorized — please sign in", StatusCodes.UNAUTHORIZED));
     }
 
     if (!allowedRoles.includes(user.role as Role)) {
       return next(
         new AppError(
           `Forbidden — requires one of: ${allowedRoles.join(", ")}`,
-          403
+          StatusCodes.FORBIDDEN
         )
       );
     }
@@ -41,7 +42,7 @@ export const requireMinRole =
     const user = req.currentUser;
 
     if (!user) {
-      return next(new AppError("Unauthorized — please sign in", 401));
+      return next(new AppError("Unauthorized — please sign in", StatusCodes.UNAUTHORIZED));
     }
 
     const userRoleIndex = ROLE_HIERARCHY.indexOf(user.role as Role);
@@ -51,7 +52,7 @@ export const requireMinRole =
       return next(
         new AppError(
           `Forbidden — requires at least ${minRole} role`,
-          403
+          StatusCodes.FORBIDDEN
         )
       );
     }
@@ -72,7 +73,7 @@ export const requireOwnerOrAdmin = (
   const resourceUserId = req.params.userId ?? req.params.id;
 
   if (!user) {
-    return next(new AppError("Unauthorized — please sign in", 401));
+    return next(new AppError("Unauthorized — please sign in", StatusCodes.UNAUTHORIZED));
   }
 
   const isAdminOrAbove =
@@ -80,7 +81,7 @@ export const requireOwnerOrAdmin = (
     ROLE_HIERARCHY.indexOf("ADMIN");
 
   if (!isAdminOrAbove && user.id !== resourceUserId) {
-    return next(new AppError("Forbidden — access denied", 403));
+    return next(new AppError("Forbidden — access denied", StatusCodes.FORBIDDEN));
   }
 
   next();

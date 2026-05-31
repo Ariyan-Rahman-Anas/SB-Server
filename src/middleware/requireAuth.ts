@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { auth } from "../auth/auth";
 import { fromNodeHeaders } from "better-auth/node";
 import { AppError } from "../utils/AppError";
+import { StatusCodes } from "http-status-codes";
 
 /**
  * Extend Express Request to carry the authenticated user & session.
@@ -47,12 +48,12 @@ export const requireAuth = async (
     });
 
     if (!session?.user || !session?.session) {
-      throw new AppError("Unauthorized — please sign in", 401);
+      throw new AppError("Unauthorized — please sign in", StatusCodes.UNAUTHORIZED);
     }
 
     // Check if user account is still active
     if ((session.user as { isActive?: boolean }).isActive === false) {
-      throw new AppError("Your account has been deactivated. Please contact support.", 403);
+      throw new AppError("Your account has been deactivated. Please contact support.", StatusCodes.FORBIDDEN);
     }
 
     req.currentUser = session.user as unknown as Request["currentUser"];

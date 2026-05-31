@@ -1,5 +1,5 @@
-import { z } from "zod";
+import { string, object } from "zod";
 
-export const wishlistItemParamSchema = z.object({
-  productId: z.string().cuid("Invalid product ID"),
+export const wishlistItemParamSchema = object({
+  productId: string().cuid("Invalid product ID"),
 });

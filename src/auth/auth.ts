@@ -6,17 +6,17 @@ import { resend } from "../lib/resend";
 import { passwordResetEmailHtml, verificationEmailHtml } from "./email-templates";
 
 export const auth = betterAuth({
-  // ── Core ────────────────────────────────────────────────────────────────────
+  // ── Core 
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   trustedOrigins: env.ALLOWED_ORIGINS,
 
-  // ── Database ─────────────────────────────────────────────────────────────────
+  // ── Database 
   database: prismaAdapter(db, {
     provider: "postgresql",
   }),
 
-  // ── Email & Password ─────────────────────────────────────────────────────────
+  // ── Email & Password 
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
@@ -36,7 +36,7 @@ export const auth = betterAuth({
     },
   },
 
-  // ── Email Verification ───────────────────────────────────────────────────────
+  // ── Email Verification 
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
       await resend.emails.send({
@@ -51,7 +51,7 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24, // 24 hours
   },
 
-  // ── Social Providers ─────────────────────────────────────────────────────────
+  // ── Social Providers 
   socialProviders: {
     google: {
       clientId: env.GOOGLE_CLIENT_ID,
@@ -59,7 +59,7 @@ export const auth = betterAuth({
     },
   },
 
-  // ── User Additional Fields ───────────────────────────────────────────────────
+  // ── User Additional Fields 
   user: {
     additionalFields: {
       role: {
@@ -92,7 +92,7 @@ export const auth = betterAuth({
     },
   },
 
-  // ── Session ──────────────────────────────────────────────────────────────────
+  // ── Session 
   session: {
     expiresIn: 60 * 60 * 24 * 7,       // 7 days
     updateAge: 60 * 60 * 24,            // refresh if older than 1 day
@@ -102,7 +102,7 @@ export const auth = betterAuth({
     },
   },
 
-  // ── Built-in Rate Limiting (for auth routes only) ────────────────────────────
+  // ── Built-in Rate Limiting (for auth routes only) 
   rateLimit: {
     enabled: true,
     window: 60,   // seconds
@@ -123,10 +123,9 @@ export const auth = betterAuth({
     },
   },
 
-  // ── Hooks ────────────────────────────────────────────────────────────────────
+  // ── Hooks 
   // Welcome email: best sent from the user registration endpoint directly
   // or via a database trigger — not via better-auth hooks (ctx shape varies).
 });
 
 export type Auth = typeof auth;
-

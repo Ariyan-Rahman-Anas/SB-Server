@@ -1,39 +1,35 @@
-import { z } from "zod";
+import { string, object, enum as zEnum, coerce } from "zod";
 
 const ROLES = ["SUPER_ADMIN", "ADMIN", "MODERATOR", "CUSTOMER"] as const;
 
-export const updateProfileSchema = z.object({
-  name: z
-    .string()
+export const updateProfileSchema = object({
+  name: string()
     .min(2, "Name must be at least 2 characters")
     .max(100)
     .optional(),
-  firstName: z.string().min(1).max(50).optional(),
-  lastName: z.string().max(50).optional(),
-  phone: z
-    .string()
+  firstName: string().min(1).max(50).optional(),
+  lastName: string().max(50).optional(),
+  phone: string()
     .regex(/^\d{7,15}$/, "Invalid phone number")
     .optional(),
-  countryCode: z
-    .string()
+  countryCode: string()
     .regex(/^\+\d{1,4}$/, "Invalid country code")
     .optional(),
-  image: z.string().url("Invalid image URL").optional(),
+  image: string().url("Invalid image URL").optional(),
 });
 
-export const updateUserRoleSchema = z.object({
-  role: z.enum(ROLES, {
+export const updateUserRoleSchema = object({
+  role: zEnum(ROLES, {
     errorMap: () => ({ message: `Role must be one of: ${ROLES.join(", ")}` }),
   }),
 });
 
-export const getUsersQuerySchema = z.object({
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(20),
-  search: z.string().max(100).optional(),
-  role: z.enum(ROLES).optional(),
-  isActive: z
-    .string()
+export const getUsersQuerySchema = object({
+  page: coerce.number().int().positive().default(1),
+  limit: coerce.number().int().positive().max(100).default(20),
+  search: string().max(100).optional(),
+  role: zEnum(ROLES).optional(),
+  isActive: string()
     .optional()
     .transform((val) => {
       if (val === "true") return true;
@@ -42,6 +38,6 @@ export const getUsersQuerySchema = z.object({
     }),
 });
 
-export const idParamSchema = z.object({
-  id: z.string().cuid("Invalid ID format"),
+export const idParamSchema = object({
+  id: string().cuid("Invalid ID format"),
 });

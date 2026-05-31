@@ -15,12 +15,12 @@ const createLimiter = (
   });
 
 /**
- * General API rate limiter — 100 requests per 15 minutes per IP.
+ * General API rate limiter — 100 requests per 20 minutes per IP.
  */
 export const apiRateLimiter = createLimiter(
-  15 * 60 * 1000,
+  20 * 60 * 1000,
   100,
-  "Too many requests — please try again in 15 minutes."
+  "Too many requests — please try again after some time."
 );
 
 /**

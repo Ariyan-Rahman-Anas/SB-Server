@@ -7,6 +7,7 @@ import {
   createBrandSchema,
   updateBrandSchema,
 } from "./brand.validation";
+import { StatusCodes } from "http-status-codes";
 
 export const getAllBrands = async (query: z.infer<typeof brandsQuerySchema>) => {
   const { page, limit, skip } = parsePagination(query.page, query.limit);
@@ -37,7 +38,7 @@ export const getBrandById = async (id: string) => {
     where: { id },
     include: { _count: { select: { products: true } } },
   });
-  if (!brand) throw new AppError("Brand not found", 404);
+  if (!brand) throw new AppError("Brand not found", StatusCodes.NOT_FOUND);
   return brand;
 };
 
@@ -47,7 +48,7 @@ export const createBrand = async (data: z.infer<typeof createBrandSchema>) => {
   const existing = await db.brand.findFirst({
     where: { OR: [{ name: data.name }, { slug }] },
   });
-  if (existing) throw new AppError("A brand with this name or slug already exists", 409);
+  if (existing) throw new AppError("A brand with this name or slug already exists", StatusCodes.CONFLICT);
 
   return db.brand.create({ data: { ...data, slug } });
 };
@@ -57,7 +58,7 @@ export const updateBrand = async (
   data: z.infer<typeof updateBrandSchema>
 ) => {
   const brand = await db.brand.findUnique({ where: { id } });
-  if (!brand) throw new AppError("Brand not found", 404);
+  if (!brand) throw new AppError("Brand not found", StatusCodes.NOT_FOUND);
 
   const slug = data.name && !data.slug ? slugify(data.name) : data.slug;
 
@@ -72,11 +73,11 @@ export const deleteBrand = async (id: string) => {
     where: { id },
     include: { _count: { select: { products: true } } },
   });
-  if (!brand) throw new AppError("Brand not found", 404);
+  if (!brand) throw new AppError("Brand not found", StatusCodes.NOT_FOUND);
   if (brand._count.products > 0)
     throw new AppError(
       `Cannot delete brand — it has ${brand._count.products} associated products`,
-      400
+      StatusCodes.BAD_REQUEST
     );
 
   return db.brand.delete({ where: { id } });

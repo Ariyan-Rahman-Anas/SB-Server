@@ -12,7 +12,7 @@ import * as userController from "./user.controller";
 
 const router = Router();
 
-// ── Current user ─────────────────────────────────────────────────────────────
+// ── Current user 
 router
   .route("/me")
   .get(requireAuth, userController.getMyProfile)
@@ -22,7 +22,7 @@ router
     userController.updateMyProfile
   );
 
-// ── Admin routes ──────────────────────────────────────────────────────────────
+// ── Admin routes 
 router.get(
   "/",
   requireAuth,

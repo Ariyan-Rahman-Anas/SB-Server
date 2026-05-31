@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
 import { AppError } from "../utils/AppError";
 import { env } from "../config/env";
+import { StatusCodes } from "http-status-codes";
 
 export const globalErrorHandler = (
   err: unknown,
@@ -10,7 +11,7 @@ export const globalErrorHandler = (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _next: NextFunction
 ): void => {
-  // ── Operational errors (AppError) ────────────────────────────────────────────
+  // ── Operational errors (AppError) 
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
       success: false,
@@ -19,13 +20,14 @@ export const globalErrorHandler = (
     return;
   }
 
-  // ── Zod validation errors ────────────────────────────────────────────────────
+  // ── Zod validation errors 
   if (err instanceof ZodError) {
     const errors = err.errors.map((e) => ({
       field: e.path.join("."),
       message: e.message,
     }));
-    res.status(422).json({
+    // res.status(422).json({
+    res.status(StatusCodes.UNPROCESSABLE_ENTITY).json({
       success: false,
       message: "Validation failed",
       errors,
@@ -33,7 +35,7 @@ export const globalErrorHandler = (
     return;
   }
 
-  // ── Prisma errors ────────────────────────────────────────────────────────────
+  // ── Prisma errors 
   if (
     typeof err === "object" &&
     err !== null &&
@@ -43,7 +45,7 @@ export const globalErrorHandler = (
 
     if (prismaError.code === "P2002") {
       const field = prismaError.meta?.target?.[0] ?? "field";
-      res.status(409).json({
+      res.status(StatusCodes.CONFLICT).json({
         success: false,
         message: `A record with this ${field} already exists.`,
       });
@@ -51,7 +53,7 @@ export const globalErrorHandler = (
     }
 
     if (prismaError.code === "P2025") {
-      res.status(404).json({
+      res.status(StatusCodes.NOT_FOUND).json({
         success: false,
         message: "Record not found.",
       });
@@ -59,10 +61,10 @@ export const globalErrorHandler = (
     }
   }
 
-  // ── Unknown / programming errors ─────────────────────────────────────────────
+  // ── Unknown / programming errors 
   console.error("🔴 Unhandled error:", err);
 
-  res.status(500).json({
+  res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
     success: false,
     message: "Internal server error",
     ...(env.NODE_ENV === "development" && {
@@ -76,7 +78,7 @@ export const globalErrorHandler = (
  * 404 handler — must be registered AFTER all routes.
  */
 export const notFoundHandler = (req: Request, res: Response): void => {
-  res.status(404).json({
+  res.status(StatusCodes.NOT_FOUND).json({
     success: false,
     message: `Route not found: ${req.method} ${req.originalUrl}`,
   });

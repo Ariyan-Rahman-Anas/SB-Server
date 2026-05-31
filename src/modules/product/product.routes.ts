@@ -14,7 +14,7 @@ import * as productController from "./product.controller";
 
 const router = Router();
 
-// ── Public ────────────────────────────────────────────────────────────────────
+// ── Public 
 router.get(
   "/",
   optionalAuth,
@@ -35,7 +35,7 @@ router.get(
   productController.getProductById
 );
 
-// ── Moderator / Admin ─────────────────────────────────────────────────────────
+// ── Moderator / Admin 
 router.post(
   "/",
   requireAuth,

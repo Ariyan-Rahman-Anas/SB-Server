@@ -15,7 +15,7 @@ const startServer = async () => {
       console.log(`🌿 Environment: ${env.NODE_ENV}`);
     });
 
-    // ── Graceful shutdown ───────────────────────────────────────────────────────
+    //  Graceful shutdown 
     const shutdown = async (signal: string) => {
       console.log(`\n⚠️  ${signal} received — shutting down gracefully`);
       server.close(async () => {

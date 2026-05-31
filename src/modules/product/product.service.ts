@@ -13,7 +13,7 @@ import {
   updateProductSchema,
 } from "./product.validation";
 
-// ── List products ─────────────────────────────────────────────────────────────
+// ── List products 
 export const getAllProducts = async (
   query: z.infer<typeof productsQuerySchema>,
   isAdmin = false

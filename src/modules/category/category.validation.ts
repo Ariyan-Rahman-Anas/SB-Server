@@ -1,29 +1,28 @@
-import { z } from "zod";
+import { z, string, object, boolean, coerce } from "zod";
 
-export const createCategorySchema = z.object({
-  name: z.string().min(1, "Category name is required").max(100),
-  slug: z
-    .string()
+export const createCategorySchema = object({
+  name: string().min(1, "Category name is required").max(100),
+  slug: string()
     .min(1)
     .max(120)
     .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with dashes")
     .optional(),
-  image: z.string().url("Image must be a valid URL").optional(),
-  parentId: z.string().cuid("Invalid parent category ID").optional(),
-  isActive: z.boolean().default(true),
+  image: string().url("Image must be a valid URL").optional(),
+  parentId: string().cuid("Invalid parent category ID").optional(),
+  isActive: boolean().default(true),
 });
 
 export const updateCategorySchema = createCategorySchema.partial();
 
-export const categoryIdParamSchema = z.object({
-  id: z.string().cuid("Invalid category ID"),
+export const categoryIdParamSchema = object({
+  id: string().cuid("Invalid category ID"),
 });
 
-export const categoriesQuerySchema = z.object({
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(50),
-  search: z.string().max(100).optional(),
-  parentId: z.string().optional(), // "null" to get root categories
+export const categoriesQuerySchema = object({
+  page: coerce.number().int().positive().default(1),
+  limit: coerce.number().int().positive().max(100).default(50),
+  search: string().max(100).optional(),
+  parentId: string().optional(), // "null" to get root categories
   isActive: z
     .string()
     .optional()

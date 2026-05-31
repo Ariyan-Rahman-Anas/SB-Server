@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z, string, object, boolean, number, enum as zEnum, array, coerce } from "zod";
 
 const PRODUCT_TYPES = ["SINGLE", "VARIABLE"] as const;
 const PRICE_TYPES = ["COMMON", "ATTRIBUTE_BASED"] as const;
@@ -7,68 +7,67 @@ const STATUSES = ["DRAFT", "PUBLISHED", "ARCHIVED"] as const;
 const ATTRIBUTE_TYPES = ["COLOR", "SIZE"] as const;
 const DISCOUNT_TYPES = ["PERCENTAGE", "FIXED"] as const;
 
-// ── Image ─────────────────────────────────────────────────────────────────────
-const productImageSchema = z.object({
-  photoURL: z.string().url("Image URL must be valid"),
-  isPrimary: z.boolean().default(false),
-  isThumbnail: z.boolean().default(false),
-  sortOrder: z.number().int().default(0),
-  attributeId: z.string().cuid().optional(),
+// ── Image 
+const productImageSchema = object({
+  photoURL: string().url("Image URL must be valid"),
+  isPrimary: boolean().default(false),
+  isThumbnail: boolean().default(false),
+  sortOrder: number().int().default(0),
+  attributeId: string().cuid().optional(),
 });
 
-// ── Attribute ─────────────────────────────────────────────────────────────────
-const productAttributeSchema = z.object({
-  attributeType: z.enum(ATTRIBUTE_TYPES),
-  title: z.string().min(1).max(100),
-  description: z.string().max(50).optional(), // hex code or size label
-  stock: z.number().int().min(0).optional(),
-  regularPrice: z.number().positive().optional(),
-  salesPrice: z.number().positive().optional(),
-  images: z.array(productImageSchema).default([]),
+// ── Attribute 
+const productAttributeSchema = object({
+  attributeType: zEnum(ATTRIBUTE_TYPES),
+  title: string().min(1).max(100),
+  description: string().max(50).optional(), // hex code or size label
+  stock: number().int().min(0).optional(),
+  regularPrice: number().positive().optional(),
+  salesPrice: number().positive().optional(),
+  images: array(productImageSchema).default([]),
 });
 
-// ── Discount ──────────────────────────────────────────────────────────────────
-const productDiscountSchema = z.object({
-  discountType: z.enum(DISCOUNT_TYPES),
-  discountValue: z.number().positive("Discount value must be positive"),
-  startsAt: z.coerce.date().optional(),
-  endsAt: z.coerce.date().optional(),
-  isActive: z.boolean().default(true),
+// ── Discount 
+const productDiscountSchema = object({
+  discountType: zEnum(DISCOUNT_TYPES),
+  discountValue: number().positive("Discount value must be positive"),
+  startsAt: coerce.date().optional(),
+  endsAt: coerce.date().optional(),
+  isActive: boolean().default(true),
 });
 
-// ── Base product object (shared between create & update) ──────────────────────
-const baseProductObject = z.object({
-  title: z.string().min(1, "Title is required").max(255),
-  slug: z
-    .string()
+// ── Base product object (shared between create & update) 
+const baseProductObject = object({
+  title: string().min(1, "Title is required").max(255),
+  slug: string()
     .max(300)
     .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with dashes")
     .optional(),
-  productCode: z.string().min(1).max(50).optional(),
-  barcode: z.string().max(50).optional(),
-  productType: z.enum(PRODUCT_TYPES).default("SINGLE"),
-  priceType: z.enum(PRICE_TYPES).default("COMMON"),
-  stockType: z.enum(STOCK_TYPES).default("COMMON"),
-  status: z.enum(STATUSES).default("DRAFT"),
+  productCode: string().min(1).max(50).optional(),
+  barcode: string().max(50).optional(),
+  productType: zEnum(PRODUCT_TYPES).default("SINGLE"),
+  priceType: zEnum(PRICE_TYPES).default("COMMON"),
+  stockType: zEnum(STOCK_TYPES).default("COMMON"),
+  status: zEnum(STATUSES).default("DRAFT"),
 
-  regularPrice: z.number().positive().optional(),
-  salesPrice: z.number().positive().optional(),
-  stock: z.number().int().min(0).optional(),
+  regularPrice: number().positive().optional(),
+  salesPrice: number().positive().optional(),
+  stock: number().int().min(0).optional(),
 
-  shortDescription: z.string().max(500).optional(),
-  longDescription: z.string().optional(),
-  ingredients: z.string().optional(),
-  other: z.string().optional(),
+  shortDescription: string().max(500).optional(),
+  longDescription: string().optional(),
+  ingredients: string().optional(),
+  other: string().optional(),
 
-  brandId: z.string().cuid("Invalid brand ID").optional(),
-  categoryId: z.string().cuid("Invalid category ID").optional(),
+  brandId: string().cuid("Invalid brand ID").optional(),
+  categoryId: string().cuid("Invalid category ID").optional(),
 
-  attributes: z.array(productAttributeSchema).default([]),
-  images: z.array(productImageSchema).default([]),
-  discounts: z.array(productDiscountSchema).default([]),
+  attributes: array(productAttributeSchema).default([]),
+  images: array(productImageSchema).default([]),
+  discounts: array(productDiscountSchema).default([]),
 });
 
-// ── Create Product ─────────────────────────────────────────────────────────────
+// ── Create Product 
 export const createProductSchema = baseProductObject.refine(
   (data) => {
     if (data.regularPrice && data.salesPrice) {
@@ -82,22 +81,22 @@ export const createProductSchema = baseProductObject.refine(
 // ── Update Product (.partial() must be on the base ZodObject, not ZodEffects) ─
 export const updateProductSchema = baseProductObject.partial();
 
-export const productIdParamSchema = z.object({
-  id: z.string().cuid("Invalid product ID"),
+export const productIdParamSchema = object({
+  id: string().cuid("Invalid product ID"),
 });
 
-export const productsQuerySchema = z.object({
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(20),
-  search: z.string().max(200).optional(),
-  status: z.enum(STATUSES).optional(),
-  brandId: z.string().cuid().optional(),
-  categoryId: z.string().cuid().optional(),
-  productType: z.enum(PRODUCT_TYPES).optional(),
-  minPrice: z.coerce.number().positive().optional(),
-  maxPrice: z.coerce.number().positive().optional(),
+export const productsQuerySchema = object({
+  page: coerce.number().int().positive().default(1),
+  limit: coerce.number().int().positive().max(100).default(20),
+  search: string().max(200).optional(),
+  status: zEnum(STATUSES).optional(),
+  brandId: string().cuid().optional(),
+  categoryId: string().cuid().optional(),
+  productType: zEnum(PRODUCT_TYPES).optional(),
+  minPrice: coerce.number().positive().optional(),
+  maxPrice: coerce.number().positive().optional(),
   sortBy: z
     .enum(["createdAt", "title", "regularPrice", "salesPrice"])
     .default("createdAt"),
-  sortOrder: z.enum(["asc", "desc"]).default("desc"),
+  sortOrder: zEnum(["asc", "desc"]).default("desc"),
 });
