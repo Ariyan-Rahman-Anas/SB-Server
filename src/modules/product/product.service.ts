@@ -132,66 +132,82 @@ export const createProduct = async (data: z.infer<typeof createProductSchema>) =
 
   const { attributes, images, discounts, ...productData } = data;
 
-  return db.$transaction(async (tx) => {
-    const product = await tx.product.create({
-      data: {
-        ...productData,
-        slug,
-        productCode,
-        regularPrice: productData.regularPrice
-          ? productData.regularPrice
-          : undefined,
-        salesPrice: productData.salesPrice ? productData.salesPrice : undefined,
-      },
-    });
-
-    // Create attributes (with their nested images)
-    for (const attr of attributes) {
-      const { images: attrImages, ...attrData } = attr;
-      const createdAttr = await tx.productAttribute.create({
-        data: { ...attrData, productId: product.id },
+  return db.$transaction(
+    async (tx) => {
+      const product = await tx.product.create({
+        data: {
+          ...productData,
+          slug,
+          productCode,
+          regularPrice: productData.regularPrice ? productData.regularPrice : undefined,
+          salesPrice: productData.salesPrice ? productData.salesPrice : undefined,
+        },
       });
 
-      if (attrImages.length > 0) {
-        await tx.productImage.createMany({
-          data: attrImages.map((img) => ({
-            ...img,
-            productId: product.id,
-            attributeId: createdAttr.id,
-          })),
-        });
-      }
-    }
+      // Create attributes in parallel, then collect their images
+      const attrImageRows: {
+        photoURL: string;
+        publicId?: string;
+        isPrimary: boolean;
+        isThumbnail: boolean;
+        sortOrder: number;
+        attributeId: string | null;
+        productId: string;
+      }[] = [];
 
-    // Create top-level images
-    if (images.length > 0) {
-      await tx.productImage.createMany({
-        data: images.map((img) => ({
+      if (attributes.length > 0) {
+        await Promise.all(
+          attributes.map(async (attr) => {
+            const { images: attrImages, ...attrData } = attr;
+            const createdAttr = await tx.productAttribute.create({
+              data: { ...attrData, productId: product.id },
+            });
+
+            for (const img of attrImages) {
+              attrImageRows.push({
+                ...img,
+                productId: product.id,
+                attributeId: createdAttr.id,
+              });
+            }
+          })
+        );
+      }
+
+      // Batch all images in two createMany calls
+      const allImages = [
+        ...attrImageRows,
+        ...images.map((img) => ({
           ...img,
           productId: product.id,
           attributeId: img.attributeId ?? null,
         })),
-      });
-    }
+      ];
 
-    // Create discounts
-    if (discounts.length > 0) {
-      await tx.productDiscount.createMany({
-        data: discounts.map((d) => ({ ...d, productId: product.id })),
-      });
-    }
+      await Promise.all([
+        allImages.length > 0
+          ? tx.productImage.createMany({ data: allImages })
+          : Promise.resolve(),
+        discounts.length > 0
+          ? tx.productDiscount.createMany({
+              data: discounts.map((d) => ({ ...d, productId: product.id })),
+            })
+          : Promise.resolve(),
+      ]);
 
-    return tx.product.findUnique({
-      where: { id: product.id },
-      include: {
-        brand: true,
-        category: true,
-        attributes: { include: { images: true } },
-        images: true,
-        discounts: true,
-      },
-    });
-  });
+      return tx.product.findUnique({
+        where: { id: product.id },
+        include: {
+          brand: true,
+          category: true,
+          attributes: { include: { images: true } },
+          images: true,
+          discounts: true,
+        },
+      });
+    },
+    { timeout: 30000 }
+  );
 };
 
 // ── Update product ────────────────────────────────────────────────────────────

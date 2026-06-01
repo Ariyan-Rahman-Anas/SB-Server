@@ -22,8 +22,8 @@ const productAttributeSchema = object({
   title: string().min(1).max(100),
   description: string().max(50).optional(), // hex code or size label
   stock: number().int().min(0).optional(),
-  regularPrice: number().positive().optional(),
-  salesPrice: number().positive().optional(),
+  regularPrice: number().positive().max(99999999.99, "Price cannot exceed 99,999,999.99").optional(),
+  salesPrice: number().positive().max(99999999.99, "Price cannot exceed 99,999,999.99").optional(),
   images: array(productImageSchema).default([]),
 });
 
@@ -50,8 +50,8 @@ const baseProductObject = object({
   stockType: zEnum(STOCK_TYPES).default("COMMON"),
   status: zEnum(STATUSES).default("DRAFT"),
 
-  regularPrice: number().positive().optional(),
-  salesPrice: number().positive().optional(),
+  regularPrice: number().positive().max(99999999.99, "Price cannot exceed 99,999,999.99").optional(),
+  salesPrice: number().positive().max(99999999.99, "Price cannot exceed 99,999,999.99").optional(),
   stock: number().int().min(0).optional(),
 
   shortDescription: string().max(500).optional(),
@@ -59,8 +59,8 @@ const baseProductObject = object({
   ingredients: string().optional(),
   other: string().optional(),
 
-  brandId: string().cuid("Invalid brand ID").optional(),
-  categoryId: string().cuid("Invalid category ID").optional(),
+  brandId: string().cuid("Invalid brand ID"),
+  categoryId: string().cuid("Invalid category ID"),
 
   attributes: array(productAttributeSchema).default([]),
   images: array(productImageSchema).default([]),

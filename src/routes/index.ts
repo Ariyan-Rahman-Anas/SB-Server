@@ -7,9 +7,11 @@ import productRouter from "../modules/product/product.routes";
 import orderRouter from "../modules/order/order.routes";
 import reviewRouter from "../modules/review/review.routes";
 import wishlistRouter from "../modules/wishlist/wishlist.routes";
+import uploadRouter from "../modules/upload/upload.routes";
 
 const router = Router();
 
+router.use("/upload", uploadRouter);
 router.use("/users", userRouter);
 router.use("/addresses", addressRouter);
 router.use("/brands", brandRouter);
