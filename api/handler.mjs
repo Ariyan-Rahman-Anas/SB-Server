@@ -1499,21 +1499,59 @@ var updateProduct = async (id, data) => {
   const product = await db.product.findUnique({ where: { id } });
   if (!product) throw new AppError("Product not found", 404);
   const slug = data.title && !data.slug ? slugify(data.title) : data.slug;
-  const { attributes: _a, images: _i, discounts: _d, ...updateData } = data;
-  return db.product.update({
-    where: { id },
-    data: {
-      ...updateData,
-      ...slug && { slug }
+  const { attributes = [], images = [], discounts = [], ...updateData } = data;
+  return db.$transaction(
+    async (tx) => {
+      await Promise.all([
+        tx.productImage.deleteMany({ where: { productId: id } }),
+        tx.productAttribute.deleteMany({ where: { productId: id } }),
+        tx.productDiscount.deleteMany({ where: { productId: id } })
+      ]);
+      await tx.product.update({
+        where: { id },
+        data: { ...updateData, ...slug && { slug } }
+      });
+      const attrImageRows = [];
+      if (attributes.length > 0) {
+        await Promise.all(
+          attributes.map(async (attr) => {
+            const { images: attrImages = [], ...attrData } = attr;
+            const createdAttr = await tx.productAttribute.create({
+              data: { ...attrData, productId: id }
+            });
+            for (const img of attrImages) {
+              attrImageRows.push({ ...img, productId: id, attributeId: createdAttr.id });
+            }
+          })
+        );
+      }
+      const allImages = [
+        ...attrImageRows,
+        ...images.map((img) => ({
+          ...img,
+          productId: id,
+          attributeId: img.attributeId ?? null
+        }))
+      ];
+      await Promise.all([
+        allImages.length > 0 ? tx.productImage.createMany({ data: allImages }) : Promise.resolve(),
+        discounts.length > 0 ? tx.productDiscount.createMany({
+          data: discounts.map((d) => ({ ...d, productId: id }))
+        }) : Promise.resolve()
+      ]);
+      return tx.product.findUnique({
+        where: { id },
+        include: {
+          brand: true,
+          category: true,
+          attributes: { include: { images: { orderBy: { sortOrder: "asc" } } }, orderBy: { createdAt: "asc" } },
+          images: { orderBy: { sortOrder: "asc" } },
+          discounts: { where: { isActive: true } }
+        }
+      });
     },
-    include: {
-      brand: true,
-      category: true,
-      attributes: { include: { images: true } },
-      images: true,
-      discounts: true
-    }
-  });
+    { timeout: 3e4 }
+  );
 };
 var deleteProduct = async (id) => {
   const product = await db.product.findUnique({ where: { id } });
