@@ -1,8 +1,7 @@
-import express from "express";
+import express, { type Request, type Response, type NextFunction } from "express";
 import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
-import { toNodeHandler } from "better-auth/node";
 
 import { env } from "./config/env";
 import { auth } from "./auth/auth";
@@ -37,9 +36,16 @@ app.use(
   })
 );
 
-// ── Better Auth ── Must be mounted BEFORE express.json() 
-// better-auth handles its own body parsing for auth routes
-app.all("/api/auth/*", toNodeHandler(auth));
+// ── Better Auth ── ESM-only package — loaded via dynamic import
+// Must be mounted BEFORE express.json() (handles its own body parsing)
+app.all("/api/auth/*", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { toNodeHandler } = await import("better-auth/node");
+    return toNodeHandler(auth)(req, res);
+  } catch (err) {
+    next(err);
+  }
+});
 
 // ── Body parsers 
 app.use(express.json({ limit: "10mb" }));

@@ -2,15 +2,14 @@
   "name": "shine-bright-server",
   "version": "1.0.0",
   "description": "Shine Bright e-commerce backend API",
-  "main": "dist/server.js",
-  "type": "module",
+  "main": "dist/api.js",
   "engines": {
     "node": ">=20.x"
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
+    "build": "tsc --outDir dist",
+    "start": "node dist/src/server.js",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
@@ -43,6 +42,7 @@
     "@types/express": "^5.0.0",
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.13.0",
+    "esbuild": "^0.28.0",
     "prisma": "^5.22.0",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.22.4",
