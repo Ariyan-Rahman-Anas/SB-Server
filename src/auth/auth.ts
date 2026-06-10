@@ -124,15 +124,15 @@ export const auth = betterAuth({
   },
 
   // ── Advanced Cookie Settings
-  // Fixes state_mismatch on Google OAuth when client and server are on
-  // different origins (localhost:3000 → localhost:5000 redirect flow).
+  // In production, client (s-bright.vercel.app) and server (api-sbright.vercel.app)
+  // are on different domains. The OAuth state cookie is set during a cross-origin
+  // fetch. Browsers only store/send cross-site cookies when SameSite=None; Secure.
+  // Without this, the state cookie is dropped → state_mismatch on Google callback.
   advanced: {
     useSecureCookies: env.NODE_ENV === "production",
-    crossSubdomainCookies: {
-      enabled: false,
-    },
     defaultCookieAttributes: {
-      sameSite: "lax",
+      sameSite: env.NODE_ENV === "production" ? "none" : "lax",
+      secure: env.NODE_ENV === "production",
       httpOnly: true,
       path: "/",
     },
