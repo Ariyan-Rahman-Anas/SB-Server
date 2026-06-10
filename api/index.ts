@@ -1,7 +1,6 @@
 /**
- * Vercel serverless entry point.
- * Exports the Express app — @vercel/node wraps it as a serverless function.
- * better-auth/node (ESM-only) is loaded via dynamic import() inside app.ts.
+ * esbuild entry point → compiled to api/handler.mjs (ESM).
+ * @vercel/node is NOT used — Vercel serves the pre-built handler.mjs directly.
  */
 import app from "../src/app";
 

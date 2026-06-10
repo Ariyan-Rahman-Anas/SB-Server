@@ -2,6 +2,7 @@ import express, { type Request, type Response, type NextFunction } from "express
 import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
+import { toNodeHandler } from "better-auth/node";
 
 import { env } from "./config/env";
 import { auth } from "./auth/auth";
@@ -11,7 +12,7 @@ import apiRouter from "./routes/index";
 
 const app = express();
 
-// ── Security headers 
+// ── Security headers
 app.set("trust proxy", 1);
 app.use(
   helmet({
@@ -23,7 +24,6 @@ app.use(
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (curl, Postman, mobile apps)
       if (!origin) return callback(null, true);
       if (env.ALLOWED_ORIGINS.includes(origin)) {
         return callback(null, true);
@@ -36,16 +36,8 @@ app.use(
   })
 );
 
-// ── Better Auth ── ESM-only package — loaded via dynamic import
-// Must be mounted BEFORE express.json() (handles its own body parsing)
-app.all("/api/auth/*", async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { toNodeHandler } = await import("better-auth/node");
-    return toNodeHandler(auth)(req, res);
-  } catch (err) {
-    next(err);
-  }
-});
+// ── Better Auth — mounted before body parsers (it handles its own parsing)
+app.all("/api/auth/*", toNodeHandler(auth));
 
 // ── Body parsers 
 app.use(express.json({ limit: "10mb" }));

@@ -1,10 +1,11 @@
-# Development files
+# Source files Vercel should not try to auto-compile
+api/index.ts
+src/
+
+# Dev/seed scripts
 src/scripts/
 *.test.ts
 *.spec.ts
-
-# Build output (Vercel handles its own build)
-dist/
 
 # Local env files
 .env
