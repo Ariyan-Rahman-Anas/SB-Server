@@ -1,8 +1,4 @@
-# Source files Vercel should not try to auto-compile
-api/index.ts
-src/
-
-# Dev/seed scripts
+# Dev/seed scripts — not needed at runtime
 src/scripts/
 *.test.ts
 *.spec.ts
