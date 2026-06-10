@@ -1,0 +1,16 @@
+# Development files
+src/scripts/
+*.test.ts
+*.spec.ts
+
+# Build output (Vercel handles its own build)
+dist/
+
+# Local env files
+.env
+.env.local
+.env.*.local
+
+# Editor/OS files
+.DS_Store
+*.log
