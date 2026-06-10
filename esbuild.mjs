@@ -6,10 +6,13 @@ await esbuild.build({
   platform: "node",
   format: "esm",
   outfile: "api/handler.mjs",
-  // Keep all node_modules external — they are available in Vercel's runtime.
-  // This avoids bundling better-auth (ESM-only) into a CJS context,
-  // and avoids the kysely internal export conflicts.
+  // Keep all node_modules external — better-auth (ESM) is resolved at runtime
+  // by Node.js which handles .mjs imports natively. Bundling better-auth
+  // causes a kysely version conflict so we must keep it external.
   packages: "external",
+  sourcemap: false,
 });
 
 console.log("✅ Build complete → api/handler.mjs");
+
+
