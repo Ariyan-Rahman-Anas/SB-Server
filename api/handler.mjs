@@ -311,8 +311,22 @@ var auth = betterAuth({
         max: 10
       }
     }
+  },
+  // ── Advanced Cookie Settings
+  // Fixes state_mismatch on Google OAuth when client and server are on
+  // different origins (localhost:3000 → localhost:5000 redirect flow).
+  advanced: {
+    useSecureCookies: env.NODE_ENV === "production",
+    crossSubdomainCookies: {
+      enabled: false
+    },
+    defaultCookieAttributes: {
+      sameSite: "lax",
+      httpOnly: true,
+      path: "/"
+    }
   }
-  // ── Hooks 
+  // ── Hooks
   // Welcome email: best sent from the user registration endpoint directly
   // or via a database trigger — not via better-auth hooks (ctx shape varies).
 });
